@@ -1,15 +1,17 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Trophy, 
   User, 
   Settings,
-  Calendar
+  Calendar,
+  Menu,
+  X
 } from "lucide-react";
 
 export const Navigation = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Trophy },
@@ -24,6 +26,13 @@ export const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center space-x-3">
+            {/* Mobile Menu Button */}
+            <button
+              className="md:hidden p-2 rounded-lg text-gray-600 hover:text-green-600 hover:bg-green-50"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <Menu className="w-6 h-6" />
+            </button>
             <div className="w-10 h-10 bg-gradient-to-br from-green-600 to-red-600 rounded-lg flex items-center justify-center">
               <Trophy className="w-6 h-6 text-white" />
             </div>
@@ -33,7 +42,7 @@ export const Navigation = () => {
             </div>
           </div>
 
-          {/* Navigation Items */}
+          {/* Navigation Items - Desktop */}
           <div className="hidden md:flex items-center space-x-1">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -64,6 +73,62 @@ export const Navigation = () => {
               <p className="text-sm font-medium text-gray-900">Usuario Demo</p>
               <p className="text-xs text-gray-500">Administrador</p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      <div
+        className={`md:hidden fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300 ${
+          isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setIsMobileMenuOpen(false)}
+      >
+        <div
+          className={`fixed left-0 top-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+            isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="p-4 border-b flex justify-between items-center">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-red-500 rounded-full flex items-center justify-center">
+                <User className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Usuario Demo</p>
+                <p className="text-xs text-gray-500">Administrador</p>
+              </div>
+            </div>
+            <button
+              className="p-2 rounded-lg text-gray-600 hover:text-green-600 hover:bg-green-50"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+          <div className="p-4">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Button
+                  key={item.id}
+                  variant={activeTab === item.id ? "default" : "ghost"}
+                  className={`w-full justify-start mb-2 ${
+                    activeTab === item.id 
+                      ? "bg-green-600 text-white" 
+                      : "text-gray-600 hover:text-green-600 hover:bg-green-50"
+                  }`}
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  <Icon className="w-4 h-4 mr-2" />
+                  <span>{item.label}</span>
+                </Button>
+              );
+            })}
           </div>
         </div>
       </div>
