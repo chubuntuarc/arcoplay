@@ -9,3 +9,5 @@
 /scripts
 /config
 .vercel
+.local.env
+.env.local
