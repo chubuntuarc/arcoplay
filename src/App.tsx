@@ -11,6 +11,8 @@ import NotFound from "./pages/NotFound";
 import Calendar from "./pages/calendar/index";
 import Control from "./pages/Control";
 import { Users } from "./pages/Users";
+import Matches from "./pages/Matches";
+import { Tournaments } from "./pages/Tournaments";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +37,8 @@ const App = () => (
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/control" element={<Control />} />
             <Route path="/control/users" element={<Users />} />
+            <Route path="/control/tournaments" element={<Tournaments />} />
+            <Route path="/control/matches" element={<Matches />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
