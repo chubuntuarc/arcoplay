@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Trophy, 
@@ -6,10 +6,13 @@ import {
   Settings,
   Calendar,
   Menu,
-  X
+  X,
+  Shield
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { PremiumBadge } from "./PremiumBadge";
+import { AdminBadge } from "@/components/AdminBadge";
 
 export const Navigation = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -18,17 +21,44 @@ export const Navigation = () => {
   const navigate = useNavigate();
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Trophy },
+    { id: '', label: 'Dashboard', icon: Trophy },
     { id: 'calendar', label: 'Calendario', icon: Calendar },
-    { id: 'profile', label: 'Perfil', icon: User },
-    { id: 'settings', label: 'Configuración', icon: Settings }
+    // { id: 'profile', label: 'Perfil', icon: User },
+    // { id: 'settings', label: 'Configuración', icon: Settings }
   ];
+
+  const filteredNavItems = user?.role === 'admin'
+    ? [
+        { id: '', label: 'Dashboard', icon: Trophy },
+        { id: 'calendar', label: 'Calendario', icon: Calendar },
+        { id: 'control', label: 'Administrar', icon: Shield },
+      ]
+    : [
+        { id: '', label: 'Dashboard', icon: Trophy },
+        { id: 'calendar', label: 'Calendario', icon: Calendar },
+      ];
 
   // Handler para logout con redirección
   const handleLogout = async () => {
     await signOut();
     navigate('/login');
   }
+  
+  const handleNavigation = (id: string) => {  
+    setActiveTab(id);
+    navigate(`/${id}`);
+  }
+  
+  useEffect(() => {
+    if (user) {
+      const path = window.location.pathname;
+      if (path.includes('/calendar')) {
+        setActiveTab('calendar');
+      } else {
+        setActiveTab('');
+      }
+    }
+  }, [user]);
 
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white shadow-lg border-b-4 border-green-600 z-50">
@@ -43,8 +73,8 @@ export const Navigation = () => {
             >
               <Menu className="w-6 h-6" />
             </button>
-            <div className="w-10 h-10 bg-gradient-to-br from-green-600 to-red-600 rounded-lg flex items-center justify-center">
-              <Trophy className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+                <img src="/arcoplay_logo.png" alt="ArcoPlay" className="w-10 h-10" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">ArcoPlay</h1>
@@ -54,7 +84,7 @@ export const Navigation = () => {
 
           {/* Navigation Items - Desktop */}
           <div className="hidden md:flex items-center space-x-1">
-            {navItems.map((item) => {
+            {filteredNavItems.map((item) => {
               const Icon = item.icon;
               return (
                 <Button
@@ -65,7 +95,7 @@ export const Navigation = () => {
                       ? "bg-green-600 text-white shadow-md" 
                       : "text-gray-600 hover:text-green-600 hover:bg-green-50"
                   }`}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => handleNavigation(item.id)}
                 >
                   <Icon className="w-4 h-4" />
                   <span>{item.label}</span>
@@ -82,6 +112,8 @@ export const Navigation = () => {
             <div className="hidden md:block">
               <p className="text-sm font-medium text-gray-900">{user?.name}</p>
               <p className="text-xs text-gray-500">{user?.email}</p>
+              {user?.role === "premium" && <div className="mt-1"><PremiumBadge /></div>}
+              {user?.role === "admin" && <div className="mt-1"><AdminBadge /></div>}
             </div>
             <Button
               variant="outline"
@@ -116,6 +148,8 @@ export const Navigation = () => {
               <div>
                 <p className="text-sm font-medium text-gray-900">{user?.name}</p>
                 <p className="text-xs text-gray-500">{user?.email}</p>
+                {user?.role === "premium" && <div className="mt-1"><PremiumBadge /></div>}
+                {user?.role === "admin" && <div className="mt-1"><AdminBadge /></div>}
               </div>
             </div>
             <button
@@ -126,7 +160,7 @@ export const Navigation = () => {
             </button>
           </div>
           <div className="p-4">
-            {navItems.map((item) => {
+            {filteredNavItems.map((item) => {
               const Icon = item.icon;
               return (
                 <Button
@@ -137,10 +171,7 @@ export const Navigation = () => {
                       ? "bg-green-600 text-white" 
                       : "text-gray-600 hover:text-green-600 hover:bg-green-50"
                   }`}
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    setIsMobileMenuOpen(false);
-                  }}
+                  onClick={() => handleNavigation(item.id)}
                 >
                   <Icon className="w-4 h-4 mr-2" />
                   <span>{item.label}</span>
