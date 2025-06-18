@@ -21,9 +21,6 @@ const Index = () => {
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
               Mis Quinielas
             </h1>
-            <p className="text-gray-600 text-lg">
-              Liga MX - Torneo Clausura 2025
-            </p>
           </div>
           
           <Button 

@@ -21,20 +21,6 @@ export const StatsPanel = ({ userRole }: StatsPanelProps) => {
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-100"
-    },
-    {
-      title: "Jornada Actual",
-      value: "5",
-      icon: Calendar,
-      color: "text-purple-600",
-      bgColor: "bg-purple-100"
-    },
-    {
-      title: "Mi Posición",
-      value: "#3",
-      icon: TrendingUp,
-      color: "text-orange-600",
-      bgColor: "bg-orange-100"
     }
   ];
 

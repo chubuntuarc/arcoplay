@@ -1,10 +1,24 @@
-
+import { useEffect, useState } from "react";
 import { QuinielaCard } from "./QuinielaCard";
 import { LeaderBoard } from "./LeaderBoard";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { MatchCard } from "./MatchCard";
+import { Clock } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 interface QuinielaDashboardProps {
   userRole: 'admin' | 'participant';
 }
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("es-MX", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
 
 export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
   // Datos de ejemplo
@@ -50,11 +64,29 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
     }
   ];
 
+  const [matches, setMatches] = useState<Match[]>([]);
+
+  useEffect(() => {
+    const fetchMatches = async () => {
+      const { data, error } = await supabase.from("matches").select("*");
+      // Filter matches for today
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayMatches = (data || []).filter(match => {
+        const matchDate = new Date(match.date);
+        matchDate.setHours(0, 0, 0, 0);
+        return matchDate.getTime() === today.getTime();
+      });
+      setMatches(todayMatches);
+    };
+    fetchMatches();
+  }, []);
+
   return (
     <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
       {/* Quinielas Section */}
       <div className="xl:col-span-3 space-y-8">
-        {userRole === 'admin' && (
+        {userRole === "admin" && (
           <section>
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
               <div className="w-1 h-8 bg-green-600 rounded-full mr-3"></div>
@@ -62,9 +94,9 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {adminQuinielas.map((quiniela) => (
-                <QuinielaCard 
-                  key={quiniela.id} 
-                  quiniela={quiniela} 
+                <QuinielaCard
+                  key={quiniela.id}
+                  quiniela={quiniela}
                   isAdmin={true}
                 />
               ))}
@@ -79,9 +111,9 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {participatingQuinielas.map((quiniela) => (
-              <QuinielaCard 
-                key={quiniela.id} 
-                quiniela={quiniela} 
+              <QuinielaCard
+                key={quiniela.id}
+                quiniela={quiniela}
                 isAdmin={false}
               />
             ))}
@@ -92,6 +124,44 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
       {/* Sidebar */}
       <div className="xl:col-span-1">
         <LeaderBoard />
+      </div>
+
+      {/* Today Matches */}
+      <div className="xl:col-span-1">
+        <div className="space-y-6">
+          {matches.length > 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg text-green-700">
+                  {formatDate(matches[0].date)}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {matches.map((match) => (
+                    <MatchCard
+                      key={match.id}
+                      match={match}
+                      layout="horizontal"
+                      hideStatus={true}
+                    />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No hay partidos programados
+                  </h3>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );
