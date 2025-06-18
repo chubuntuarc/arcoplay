@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { QuinielaDashboard } from "@/components/QuinielaDashboard";
@@ -15,7 +14,7 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-red-50">
       <Navigation />
       
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 mt-16">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>

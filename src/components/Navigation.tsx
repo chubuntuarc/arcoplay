@@ -8,10 +8,14 @@ import {
   Menu,
   X
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export const Navigation = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, signOut } = useAuth()
+  const navigate = useNavigate();
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Trophy },
@@ -20,8 +24,14 @@ export const Navigation = () => {
     { id: 'settings', label: 'Configuración', icon: Settings }
   ];
 
+  // Handler para logout con redirección
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  }
+
   return (
-    <nav className="bg-white shadow-lg border-b-4 border-green-600">
+    <nav className="fixed top-0 left-0 right-0 bg-white shadow-lg border-b-4 border-green-600 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -37,8 +47,8 @@ export const Navigation = () => {
               <Trophy className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">QuinielaMX</h1>
-              <p className="text-sm text-gray-500">Liga MX</p>
+              <h1 className="text-xl font-bold text-gray-900">ArcoPlay</h1>
+              <p className="text-sm text-gray-500">Juega con tus amigos</p>
             </div>
           </div>
 
@@ -70,9 +80,17 @@ export const Navigation = () => {
               <User className="w-4 h-4 text-white" />
             </div>
             <div className="hidden md:block">
-              <p className="text-sm font-medium text-gray-900">Usuario Demo</p>
-              <p className="text-xs text-gray-500">Administrador</p>
+              <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+              <p className="text-xs text-gray-500">{user?.email}</p>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-2 hidden md:inline-flex"
+              onClick={handleLogout}
+            >
+              Cerrar sesión
+            </Button>
           </div>
         </div>
       </div>
@@ -96,8 +114,8 @@ export const Navigation = () => {
                 <User className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">Usuario Demo</p>
-                <p className="text-xs text-gray-500">Administrador</p>
+                <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                <p className="text-xs text-gray-500">{user?.email}</p>
               </div>
             </div>
             <button
@@ -129,6 +147,14 @@ export const Navigation = () => {
                 </Button>
               );
             })}
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full mt-2"
+              onClick={handleLogout}
+            >
+              Cerrar sesión
+            </Button>
           </div>
         </div>
       </div>
