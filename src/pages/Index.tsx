@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { QuinielaDashboard } from "@/components/QuinielaDashboard";
 import { StatsPanel } from "@/components/StatsPanel";
@@ -7,11 +8,34 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
+import { joinQuiniela, isUserParticipant } from "@/lib/quiniela";
+import { toast } from "sonner";
 
 const Index = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [userRole] = useState<'admin' | 'participant'>('admin'); // Simulado por ahora
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const waInvite = searchParams.get("wa-invite");
+    if (user && waInvite) {
+      isUserParticipant(waInvite, user.id).then(async (already) => {
+        if (!already) {
+          try {
+            await joinQuiniela(waInvite, user.id);
+            toast.success("¡Te has unido a la quiniela por invitación de WhatsApp!");
+            searchParams.delete("wa-invite");
+            setSearchParams(searchParams, { replace: true });
+            navigate(`/quiniela/${waInvite}`);
+          } catch (e) {
+            toast.error("No se pudo unir a la quiniela (quizá está llena o cerrada)");
+          }
+        }
+      });
+    }
+  }, [user, searchParams, setSearchParams, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-red-50">

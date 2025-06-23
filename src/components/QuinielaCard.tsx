@@ -1,8 +1,8 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Trophy, Settings, Calendar } from "lucide-react";
+import { Users, Trophy, Share2, Calendar } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface Quiniela {
   id: string;
@@ -20,6 +20,7 @@ interface QuinielaCardProps {
 }
 
 export const QuinielaCard = ({ quiniela, isAdmin }: QuinielaCardProps) => {
+  const navigate = useNavigate();
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800 border-green-200';
@@ -89,16 +90,26 @@ export const QuinielaCard = ({ quiniela, isAdmin }: QuinielaCardProps) => {
           <Button 
             className="flex-1 bg-green-600 hover:bg-green-700 text-white"
             size="sm"
+            onClick={() => navigate(`/quiniela/${quiniela.id}`)}
           >
             Ver Quiniela
           </Button>
           {isAdmin && (
-            <Button 
+            <Button
               variant="outline"
               size="sm"
               className="border-green-600 text-green-600 hover:bg-green-50"
+              asChild
             >
-              <Settings className="w-4 h-4" />
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(
+                  `¡Únete a la quiniela '${quiniela.name}' en ArcoPlay!\n\n${window.location.origin}/?wa-invite=${quiniela.id}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Share2 className="w-4 h-4" />
+              </a>
             </Button>
           )}
         </div>

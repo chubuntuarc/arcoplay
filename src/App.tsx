@@ -15,6 +15,7 @@ import Matches from "./pages/Matches";
 import { Tournaments } from "./pages/Tournaments";
 import { ControlQuinielas } from "./pages/ControlQuinielas";
 import Plans from "./pages/Plans";
+import ViewQuiniela from "./pages/ViewQuiniela";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/control/matches" element={<Matches />} />
             <Route path="/control/quinielas" element={<ControlQuinielas />} />
             <Route path="/plans" element={<Plans />} />
+            <Route path="/quiniela/:id" element={<ViewQuiniela />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
