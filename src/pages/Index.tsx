@@ -20,20 +20,33 @@ const Index = () => {
 
   useEffect(() => {
     const waInvite = searchParams.get("wa-invite");
-    if (user && waInvite) {
-      isUserParticipant(waInvite, user.id).then(async (already) => {
-        if (!already) {
-          try {
-            await joinQuiniela(waInvite, user.id);
-            toast.success("¡Te has unido a la quiniela por invitación de WhatsApp!");
-            searchParams.delete("wa-invite");
-            setSearchParams(searchParams, { replace: true });
-            navigate(`/quiniela/${waInvite}`);
-          } catch (e) {
-            toast.error("No se pudo unir a la quiniela (quizá está llena o cerrada)");
+    if (!user && waInvite) {
+      // Guardar invitación pendiente en localStorage
+      localStorage.setItem("pending_wa_invite", waInvite);
+    }
+    if (user) {
+      // Revisar si hay invitación pendiente
+      const pending = localStorage.getItem("pending_wa_invite");
+      const inviteId = pending || waInvite;
+      if (inviteId) {
+        isUserParticipant(inviteId, user.id).then(async (already) => {
+          if (!already) {
+            try {
+              await joinQuiniela(inviteId, user.id);
+              toast.success("¡Te has unido a la quiniela por invitación de WhatsApp!");
+              localStorage.removeItem("pending_wa_invite");
+              searchParams.delete("wa-invite");
+              setSearchParams(searchParams, { replace: true });
+              navigate(`/quiniela/${inviteId}`);
+            } catch (e) {
+              toast.error("No se pudo unir a la quiniela (quizá está llena o cerrada)");
+              localStorage.removeItem("pending_wa_invite");
+            }
+          } else {
+            localStorage.removeItem("pending_wa_invite");
           }
-        }
-      });
+        });
+      }
     }
   }, [user, searchParams, setSearchParams, navigate]);
 
