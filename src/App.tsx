@@ -14,6 +14,7 @@ import { Users } from "./pages/Users";
 import Matches from "./pages/Matches";
 import { Tournaments } from "./pages/Tournaments";
 import { ControlQuinielas } from "./pages/ControlQuinielas";
+import Plans from "./pages/Plans";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/control/tournaments" element={<Tournaments />} />
             <Route path="/control/matches" element={<Matches />} />
             <Route path="/control/quinielas" element={<ControlQuinielas />} />
+            <Route path="/plans" element={<Plans />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

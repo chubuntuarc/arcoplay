@@ -78,6 +78,12 @@ export const CreateQuinielaModal = ({ isOpen, onClose, onQuinielaCreated }: Crea
       newErrors.push('El máximo de participantes debe ser al menos 2');
     }
 
+    // Check participant limit based on role
+    const maxParticipants = parseInt(formData.maxParticipants);
+    if (roleLimits.participants !== -1 && maxParticipants > roleLimits.participants) {
+      newErrors.push(`Tu rol permite máximo ${roleLimits.participants} participantes por quiniela`);
+    }
+
     if (formData.entryFee && parseFloat(formData.entryFee) < 0) {
       newErrors.push('La cuota de entrada no puede ser negativa');
     }
@@ -225,6 +231,11 @@ export const CreateQuinielaModal = ({ isOpen, onClose, onQuinielaCreated }: Crea
             <Label htmlFor="maxParticipants" className="text-sm font-medium text-gray-700 flex items-center">
               <Users className="w-4 h-4 text-blue-500 mr-1" />
               Máximo de Participantes
+              {roleLimits.participants !== -1 && (
+                <span className="text-xs text-gray-500 ml-1">
+                  (Máx: {roleLimits.participants})
+                </span>
+              )}
             </Label>
             <Input
               id="maxParticipants"
@@ -234,10 +245,15 @@ export const CreateQuinielaModal = ({ isOpen, onClose, onQuinielaCreated }: Crea
               onChange={(e) => setFormData({...formData, maxParticipants: e.target.value})}
               className="w-full"
               min="2"
-              max="100"
+              max={roleLimits.participants === -1 ? undefined : roleLimits.participants}
               required
               disabled={!canCreate}
             />
+            {roleLimits.participants !== -1 && (
+              <p className="text-xs text-gray-500">
+                Tu rol permite máximo {roleLimits.participants} participantes por quiniela
+              </p>
+            )}
           </div>
 
           {/* Torneo */}

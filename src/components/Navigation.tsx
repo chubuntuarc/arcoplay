@@ -23,6 +23,7 @@ export const Navigation = () => {
   const navItems = [
     { id: '', label: 'Dashboard', icon: Trophy },
     { id: 'calendar', label: 'Calendario', icon: Calendar },
+    { id: 'plans', label: 'Ver planes', icon: Trophy },
     // { id: 'profile', label: 'Perfil', icon: User },
     // { id: 'settings', label: 'Configuración', icon: Settings }
   ];
@@ -36,6 +37,7 @@ export const Navigation = () => {
     : [
         { id: '', label: 'Dashboard', icon: Trophy },
         { id: 'calendar', label: 'Calendario', icon: Calendar },
+        { id: 'plans', label: 'Ver planes', icon: Trophy },
       ];
 
   // Handler para logout con redirección

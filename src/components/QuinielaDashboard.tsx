@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { getUserQuinielas, Quiniela } from "@/lib/quiniela";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface QuinielaDashboardProps {
   userRole: 'admin' | 'participant';
@@ -45,6 +46,7 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [showMatches, setShowMatches] = useState(true);
   const [showUserQuinielas, setShowUserQuinielas] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -158,6 +160,23 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
                 ))}
               </div>
             )}
+            {user?.role === "user" && (
+              <div className="border-2 border-dashed border-green-400 rounded-lg p-6 flex flex-col items-center justify-center bg-green-50 mt-6">
+                <span className="text-3xl mb-2">✨</span>
+                <h3 className="text-lg font-bold text-green-800 mb-1">¿Quieres crear más quinielas?</h3>
+                <p className="text-sm text-green-700 mb-4 text-center">
+                  Mejora tu plan para crear quinielas ilimitadas y acceder a funciones premium.
+                </p>
+                <button
+                  className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded transition"
+                  onClick={() => {
+                    navigate('/plans');
+                  }}
+                >
+                  Ver planes premium
+                </button>
+              </div>
+            )}
           </section>
         )}
 
@@ -236,7 +255,7 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-4">
                     {matches.map((match) => (
                       <MatchCard
                         key={match.id}
