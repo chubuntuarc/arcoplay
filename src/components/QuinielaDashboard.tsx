@@ -281,6 +281,24 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
             )
           )}
         </div>
+        {/* Web Development Ad Section */}
+        {user?.role === "user" && (
+          <div className="mt-8 border-2 border-dashed border-blue-400 rounded-lg p-6 bg-blue-50 flex flex-col items-center text-center">
+            <span className="text-3xl mb-2">💻</span>
+            <h3 className="text-lg font-bold text-blue-800 mb-1">¿Necesitas una página web o software a la medida?</h3>
+            <p className="text-sm text-blue-700 mb-4">
+              Desarrollamos páginas, tiendas en línea y sistemas personalizados para tu negocio o proyecto. ¡Lleva tu idea al siguiente nivel!
+            </p>
+            <a
+              href="https://wa.me/526141561723?text=Hola%2C%20quiero%20informes%20sobre%20desarrollo%20web%20a%20la%20medida"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded transition"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Solicita tu cotización por WhatsApp
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );
