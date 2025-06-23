@@ -1,33 +1,134 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trophy, Users, Calendar } from "lucide-react";
+import { Trophy, Users, Calendar, AlertCircle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { createQuiniela, getAvailableTournaments, getUserQuinielas, getRoleLimits, Tournament, Quiniela } from "@/lib/quiniela";
+import { toast } from "sonner";
 
 interface CreateQuinielaModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onQuinielaCreated?: () => void;
 }
 
-export const CreateQuinielaModal = ({ isOpen, onClose }: CreateQuinielaModalProps) => {
+export const CreateQuinielaModal = ({ isOpen, onClose, onQuinielaCreated }: CreateQuinielaModalProps) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     entryFee: "",
     maxParticipants: "",
-    tournament: "ligamx-clausura-2025"
+    tournament: ""
   });
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [userQuinielas, setUserQuinielas] = useState<Quiniela[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<string[]>([]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Creating quiniela:", formData);
-    // Aquí iría la lógica para crear la quiniela
-    onClose();
+  useEffect(() => {
+    if (isOpen && user) {
+      loadData();
+    }
+  }, [isOpen, user]);
+
+  const loadData = async () => {
+    try {
+      const [availableTournaments, userQuinielasData] = await Promise.all([
+        getAvailableTournaments(user?.role || 'user'),
+        getUserQuinielas(user?.id || '')
+      ]);
+      
+      setTournaments(availableTournaments);
+      setUserQuinielas(userQuinielasData);
+      
+      // Set default tournament if available
+      if (availableTournaments.length > 0 && !formData.tournament) {
+        setFormData(prev => ({ ...prev, tournament: availableTournaments[0].id }));
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+      toast.error('Error al cargar los datos');
+    }
   };
+
+  const validateForm = (): string[] => {
+    const newErrors: string[] = [];
+    const roleLimits = getRoleLimits(user?.role || 'user');
+
+    // Check quiniela limit
+    if (roleLimits.quinielas !== -1 && userQuinielas.length >= roleLimits.quinielas) {
+      newErrors.push(`Ya tienes el máximo de quinielas permitidas para tu rol (${roleLimits.quinielas})`);
+    }
+
+    // Check required fields
+    if (!formData.name.trim()) {
+      newErrors.push('El nombre de la quiniela es requerido');
+    }
+
+    if (!formData.tournament) {
+      newErrors.push('Debes seleccionar un torneo');
+    }
+
+    if (!formData.maxParticipants || parseInt(formData.maxParticipants) < 2) {
+      newErrors.push('El máximo de participantes debe ser al menos 2');
+    }
+
+    if (formData.entryFee && parseFloat(formData.entryFee) < 0) {
+      newErrors.push('La cuota de entrada no puede ser negativa');
+    }
+
+    return newErrors;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const validationErrors = validateForm();
+    if (validationErrors.length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    setIsLoading(true);
+    setErrors([]);
+
+    try {
+      await createQuiniela({
+        name: formData.name.trim(),
+        description: formData.description.trim() || undefined,
+        tournament_id: formData.tournament,
+        entry_fee: formData.entryFee ? parseFloat(formData.entryFee) : 0,
+        max_participants: parseInt(formData.maxParticipants)
+      }, user?.id || '');
+
+      toast.success('Quiniela creada exitosamente');
+      onQuinielaCreated?.();
+      onClose();
+      
+      // Reset form
+      setFormData({
+        name: "",
+        description: "",
+        entryFee: "",
+        maxParticipants: "",
+        tournament: ""
+      });
+    } catch (error: unknown) {
+      console.error('Error creating quiniela:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error al crear la quiniela';
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const roleLimits = getRoleLimits(user?.role || 'user');
+  const canCreate = roleLimits.quinielas === -1 || userQuinielas.length < roleLimits.quinielas;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -38,6 +139,34 @@ export const CreateQuinielaModal = ({ isOpen, onClose }: CreateQuinielaModalProp
             Crear Nueva Quiniela
           </DialogTitle>
         </DialogHeader>
+
+        {!canCreate && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center">
+              <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
+              <span className="text-red-800 font-medium">
+                Límite de quinielas alcanzado
+              </span>
+            </div>
+            <p className="text-red-700 text-sm mt-1">
+              Tu rol ({user?.role}) permite crear máximo {roleLimits.quinielas} quiniela{roleLimits.quinielas !== 1 ? 's' : ''}.
+            </p>
+          </div>
+        )}
+
+        {errors.length > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center mb-2">
+              <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
+              <span className="text-red-800 font-medium">Errores de validación:</span>
+            </div>
+            <ul className="text-red-700 text-sm space-y-1">
+              {errors.map((error, index) => (
+                <li key={index}>• {error}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Nombre */}
@@ -53,6 +182,7 @@ export const CreateQuinielaModal = ({ isOpen, onClose }: CreateQuinielaModalProp
               onChange={(e) => setFormData({...formData, name: e.target.value})}
               className="w-full"
               required
+              disabled={!canCreate}
             />
           </div>
 
@@ -67,6 +197,7 @@ export const CreateQuinielaModal = ({ isOpen, onClose }: CreateQuinielaModalProp
               value={formData.description}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
               className="w-full h-20 resize-none"
+              disabled={!canCreate}
             />
           </div>
 
@@ -84,6 +215,8 @@ export const CreateQuinielaModal = ({ isOpen, onClose }: CreateQuinielaModalProp
               onChange={(e) => setFormData({...formData, entryFee: e.target.value})}
               className="w-full"
               min="0"
+              step="0.01"
+              disabled={!canCreate}
             />
           </div>
 
@@ -102,6 +235,8 @@ export const CreateQuinielaModal = ({ isOpen, onClose }: CreateQuinielaModalProp
               className="w-full"
               min="2"
               max="100"
+              required
+              disabled={!canCreate}
             />
           </div>
 
@@ -111,15 +246,34 @@ export const CreateQuinielaModal = ({ isOpen, onClose }: CreateQuinielaModalProp
               <Calendar className="w-4 h-4 text-green-500 mr-1" />
               Torneo
             </Label>
-            <Select value={formData.tournament} onValueChange={(value) => setFormData({...formData, tournament: value})}>
+            <Select 
+              value={formData.tournament} 
+              onValueChange={(value) => setFormData({...formData, tournament: value})}
+              disabled={!canCreate}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona un torneo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ligamx-clausura-2025">Liga MX - Clausura 2025</SelectItem>
-                <SelectItem value="ligamx-apertura-2025" disabled>Liga MX - Apertura 2025 (Próximamente)</SelectItem>
+                {tournaments.map((tournament) => (
+                  <SelectItem key={tournament.id} value={tournament.id}>
+                    {tournament.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Información del rol */}
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <h4 className="text-sm font-semibold text-blue-800 mb-2">
+              Información de tu Rol: {user?.role?.toUpperCase()}
+            </h4>
+            <ul className="text-xs text-blue-700 space-y-1">
+              <li>• Quinielas que puedes crear: {roleLimits.quinielas === -1 ? 'Sin límite' : roleLimits.quinielas}</li>
+              <li>• Participantes por torneo: {roleLimits.participants === -1 ? 'Sin límite' : roleLimits.participants}</li>
+              <li>• Torneos disponibles: {roleLimits.tournaments === -1 ? 'Sin límite' : roleLimits.tournaments}</li>
+            </ul>
           </div>
 
           {/* Sistema de puntuación */}
@@ -144,14 +298,16 @@ export const CreateQuinielaModal = ({ isOpen, onClose }: CreateQuinielaModalProp
               variant="outline"
               onClick={onClose}
               className="flex-1"
+              disabled={isLoading}
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              disabled={!canCreate || isLoading}
             >
-              Crear Quiniela
+              {isLoading ? 'Creando...' : 'Crear Quiniela'}
             </Button>
           </div>
         </form>

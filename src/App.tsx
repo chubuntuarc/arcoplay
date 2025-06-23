@@ -13,6 +13,7 @@ import Control from "./pages/Control";
 import { Users } from "./pages/Users";
 import Matches from "./pages/Matches";
 import { Tournaments } from "./pages/Tournaments";
+import { ControlQuinielas } from "./pages/ControlQuinielas";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/control/users" element={<Users />} />
             <Route path="/control/tournaments" element={<Tournaments />} />
             <Route path="/control/matches" element={<Matches />} />
+            <Route path="/control/quinielas" element={<ControlQuinielas />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

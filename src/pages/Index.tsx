@@ -33,7 +33,7 @@ const Index = () => {
         </div>
 
         {/* Stats Panel */}
-        <StatsPanel userRole={userRole} />
+        {/* <StatsPanel userRole={userRole} /> */}
 
         {/* Dashboard */}
         <QuinielaDashboard userRole={userRole} />
