@@ -138,7 +138,7 @@ export const CreateQuinielaModal = ({ isOpen, onClose, onQuinielaCreated }: Crea
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto px-2 sm:px-6 py-4">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center">
             <Trophy className="w-6 h-6 text-green-600 mr-2" />
@@ -174,9 +174,9 @@ export const CreateQuinielaModal = ({ isOpen, onClose, onQuinielaCreated }: Crea
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5 flex flex-col">
           {/* Nombre */}
-          <div className="space-y-2">
+          <div className="space-y-2 w-full">
             <Label htmlFor="name" className="text-sm font-medium text-gray-700">
               Nombre de la Quiniela
             </Label>
@@ -193,7 +193,7 @@ export const CreateQuinielaModal = ({ isOpen, onClose, onQuinielaCreated }: Crea
           </div>
 
           {/* Descripción */}
-          <div className="space-y-2">
+          <div className="space-y-2 w-full">
             <Label htmlFor="description" className="text-sm font-medium text-gray-700">
               Descripción (Opcional)
             </Label>
@@ -208,7 +208,7 @@ export const CreateQuinielaModal = ({ isOpen, onClose, onQuinielaCreated }: Crea
           </div>
 
           {/* Cuota de entrada */}
-          <div className="space-y-2">
+          <div className="space-y-2 w-full">
             <Label htmlFor="entryFee" className="text-sm font-medium text-gray-700 flex items-center">
               <Trophy className="w-4 h-4 text-yellow-500 mr-1" />
               Cuota de Entrada (MXN)
@@ -227,7 +227,7 @@ export const CreateQuinielaModal = ({ isOpen, onClose, onQuinielaCreated }: Crea
           </div>
 
           {/* Máximo de participantes */}
-          <div className="space-y-2">
+          <div className="space-y-2 w-full">
             <Label htmlFor="maxParticipants" className="text-sm font-medium text-gray-700 flex items-center">
               <Users className="w-4 h-4 text-blue-500 mr-1" />
               Máximo de Participantes
@@ -257,7 +257,7 @@ export const CreateQuinielaModal = ({ isOpen, onClose, onQuinielaCreated }: Crea
           </div>
 
           {/* Torneo */}
-          <div className="space-y-2">
+          <div className="space-y-2 w-full">
             <Label htmlFor="tournament" className="text-sm font-medium text-gray-700 flex items-center">
               <Calendar className="w-4 h-4 text-green-500 mr-1" />
               Torneo
@@ -281,7 +281,7 @@ export const CreateQuinielaModal = ({ isOpen, onClose, onQuinielaCreated }: Crea
           </div>
 
           {/* Información del rol */}
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <div className="bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-200 w-full">
             <h4 className="text-sm font-semibold text-blue-800 mb-2">
               Información de tu Rol: {user?.role?.toUpperCase()}
             </h4>
@@ -293,7 +293,7 @@ export const CreateQuinielaModal = ({ isOpen, onClose, onQuinielaCreated }: Crea
           </div>
 
           {/* Sistema de puntuación */}
-          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+          <div className="bg-green-50 p-3 sm:p-4 rounded-lg border border-green-200 w-full">
             <h4 className="text-sm font-semibold text-green-800 mb-2">
               Sistema de Puntuación Predeterminado
             </h4>
@@ -308,19 +308,19 @@ export const CreateQuinielaModal = ({ isOpen, onClose, onQuinielaCreated }: Crea
           </div>
 
           {/* Botones */}
-          <div className="flex space-x-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 w-full">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
-              className="flex-1"
+              className="w-full sm:w-auto"
               disabled={isLoading}
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
               disabled={!canCreate || isLoading}
             >
               {isLoading ? 'Creando...' : 'Crear Quiniela'}
