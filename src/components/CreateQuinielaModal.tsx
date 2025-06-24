@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trophy, Users, Calendar, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { createQuiniela, getAvailableTournaments, getUserQuinielas, getRoleLimits, Tournament, Quiniela } from "@/lib/quiniela";
+import { createQuiniela, getAvailableTournaments, getUserQuinielas, getRoleLimits, Tournament, Quiniela, joinQuiniela } from "@/lib/quiniela";
 import { toast } from "sonner";
 
 interface CreateQuinielaModalProps {
@@ -104,13 +104,18 @@ export const CreateQuinielaModal = ({ isOpen, onClose, onQuinielaCreated }: Crea
     setErrors([]);
 
     try {
-      await createQuiniela({
+      const newQuiniela = await createQuiniela({
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         tournament_id: formData.tournament,
         entry_fee: formData.entryFee ? parseFloat(formData.entryFee) : 0,
         max_participants: parseInt(formData.maxParticipants)
       }, user?.id || '');
+
+      // Registrar al usuario como participante
+      if (user && newQuiniela?.id) {
+        await joinQuiniela(newQuiniela.id, user.id);
+      }
 
       toast.success('Quiniela creada exitosamente');
       onQuinielaCreated?.();
