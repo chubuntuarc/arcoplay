@@ -64,13 +64,14 @@ const formatDate = (dateString: string) => {
 };
 
 export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const [userQuinielas, setUserQuinielas] = useState<Quiniela[]>([]);
   const [participatingQuinielas, setParticipatingQuinielas] = useState<Quiniela[]>([]);
   const [groupedMatches, setGroupedMatches] = useState<GroupedMatches[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showMatches, setShowMatches] = useState(true);
   const [showUserQuinielas, setShowUserQuinielas] = useState(true);
+  const [showParticipatingQuinielas, setShowParticipatingQuinielas] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -182,6 +183,31 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
     }
   };
 
+  const refreshUserRoleIfNeeded = async () => {
+    const lastChecked = localStorage.getItem('lastRoleCheck');
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+
+    if (!lastChecked || now - parseInt(lastChecked, 10) > oneDay) {
+      if (user) {
+        const previousRole = user.role;
+        const { data: userData, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        if (userData) {
+          setUser(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
+          localStorage.setItem('lastRoleCheck', now.toString());
+          if (userData.role !== previousRole) {
+            toast.info(`Tu rol ha cambiado: ahora eres "${userData.role}"`);
+          }
+        }
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -255,27 +281,42 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
 
         {participatingQuinielas.length > 0 && (
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-              <div className="w-1 h-8 bg-red-600 rounded-full mr-3"></div>
-              Quinielas en las que Participo ({participatingQuinielas.length})
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {participatingQuinielas.map((quiniela) => (
-                <QuinielaCard
-                  key={quiniela.id}
-                  quiniela={{
-                    id: quiniela.id,
-                    name: quiniela.name,
-                    participants: quiniela.current_participants,
-                    status: quiniela.is_active ? 'active' : 'finished',
-                    currentJornada: 5, // TODO: Calcular jornada actual
-                    totalJornadas: 17, // TODO: Obtener del torneo
-                    prize: quiniela.entry_fee > 0 ? `$${quiniela.entry_fee} MXN` : 'Gratis'
-                  }}
-                  isAdmin={false}
-                />
-              ))}
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                <div className="w-1 h-8 bg-red-600 rounded-full mr-3"></div>
+                Quinielas en las que Participo ({participatingQuinielas.length})
+              </h2>
+              <button
+                onClick={() => setShowParticipatingQuinielas(!showParticipatingQuinielas)}
+                className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <span>{showParticipatingQuinielas ? 'Ocultar' : 'Mostrar'}</span>
+                {showParticipatingQuinielas ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
+              </button>
             </div>
+            {showParticipatingQuinielas && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {participatingQuinielas.map((quiniela) => (
+                  <QuinielaCard
+                    key={quiniela.id}
+                    quiniela={{
+                      id: quiniela.id,
+                      name: quiniela.name,
+                      participants: quiniela.current_participants,
+                      status: quiniela.is_active ? 'active' : 'finished',
+                      currentJornada: 5, // TODO: Calcular jornada actual
+                      totalJornadas: 17, // TODO: Obtener del torneo
+                      prize: quiniela.entry_fee > 0 ? `$${quiniela.entry_fee} MXN` : 'Gratis'
+                    }}
+                    isAdmin={false}
+                  />
+                ))}
+              </div>
+            )}
           </section>
         )}
 

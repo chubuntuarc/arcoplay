@@ -38,6 +38,7 @@ export const QuinielaCard = ({ quiniela, isAdmin }: QuinielaCardProps) => {
       default: return 'Desconocido';
     }
   };
+  
 
   return (
     <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-l-4 border-l-green-500">
@@ -59,20 +60,20 @@ export const QuinielaCard = ({ quiniela, isAdmin }: QuinielaCardProps) => {
             <Users className="w-4 h-4 text-green-600" />
             <span>{quiniela.participants} participantes</span>
           </div>
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
+          {/* <div className="flex items-center space-x-2 text-sm text-gray-600">
             <Calendar className="w-4 h-4 text-blue-600" />
             <span>J{quiniela.currentJornada}/{quiniela.totalJornadas}</span>
-          </div>
+          </div> */}
         </div>
 
         {/* Prize */}
-        <div className="flex items-center space-x-2 text-sm">
+        {/* <div className="flex items-center space-x-2 text-sm">
           <Trophy className="w-4 h-4 text-yellow-600" />
-          <span className="font-semibold text-gray-700">Premio: {quiniela.prize}</span>
-        </div>
+          <span className="font-semibold text-gray-700">Cuota: {quiniela.prize}</span>
+        </div> */}
 
         {/* Progress Bar */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <div className="flex justify-between text-xs text-gray-500">
             <span>Progreso del torneo</span>
             <span>{Math.round((quiniela.currentJornada / quiniela.totalJornadas) * 100)}%</span>
@@ -83,7 +84,7 @@ export const QuinielaCard = ({ quiniela, isAdmin }: QuinielaCardProps) => {
               style={{ width: `${(quiniela.currentJornada / quiniela.totalJornadas) * 100}%` }}
             ></div>
           </div>
-        </div>
+        </div> */}
 
         {/* Actions */}
         <div className="flex space-x-2 pt-2">
