@@ -3,7 +3,7 @@ import { QuinielaCard } from "./QuinielaCard";
 import { LeaderBoard } from "./LeaderBoard";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { MatchCard } from "./MatchCard";
-import { Clock, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Clock, Loader2, ChevronDown, ChevronUp, Trophy } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { getUserQuinielas, Quiniela } from "@/lib/quiniela";
@@ -26,6 +26,31 @@ interface Match {
   score: { home: number; away: number } | null;
   created_at: string;
   updated_at: string;
+  jornada_id: string | null;
+  tournament?: Tournament;
+  jornada?: Jornada;
+}
+
+interface Tournament {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  is_active: boolean;
+}
+
+interface Jornada {
+  id: string;
+  torneo_id: string;
+  nombre: string;
+  tipo: string | null;
+  numero: number | null;
+}
+
+interface GroupedMatches {
+  tournament: Tournament;
+  jornada: Jornada;
+  matches: Match[];
 }
 
 const formatDate = (dateString: string) => {
@@ -42,7 +67,7 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
   const { user } = useAuth();
   const [userQuinielas, setUserQuinielas] = useState<Quiniela[]>([]);
   const [participatingQuinielas, setParticipatingQuinielas] = useState<Quiniela[]>([]);
-  const [matches, setMatches] = useState<Match[]>([]);
+  const [groupedMatches, setGroupedMatches] = useState<GroupedMatches[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showMatches, setShowMatches] = useState(true);
   const [showUserQuinielas, setShowUserQuinielas] = useState(true);
@@ -84,10 +109,14 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
       
       setParticipatingQuinielas(participating);
 
-      // Cargar partidos de hoy
+      // Cargar partidos de hoy con información de torneo y jornada
       const { data: matchesData, error: matchesError } = await supabase
         .from("matches")
-        .select("*");
+        .select(`
+          *,
+          tournament:tournaments(*),
+          jornada:jornadas(*)
+        `);
 
       if (matchesError) throw matchesError;
 
@@ -99,7 +128,51 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
         matchDate.setHours(0, 0, 0, 0);
         return matchDate.getTime() === today.getTime();
       });
-      setMatches(todayMatches);
+
+      // Agrupar partidos por torneo y jornada
+      const grouped: GroupedMatches[] = [];
+      const groups: Record<string, Record<string, Match[]>> = {};
+
+      todayMatches.forEach(match => {
+        const tournamentId = match.tournament_id;
+        const jornadaId = match.jornada_id || 'sin-jornada';
+        
+        if (!groups[tournamentId]) {
+          groups[tournamentId] = {};
+        }
+        if (!groups[tournamentId][jornadaId]) {
+          groups[tournamentId][jornadaId] = [];
+        }
+        groups[tournamentId][jornadaId].push(match);
+      });
+
+      // Convertir grupos a array estructurado
+      Object.entries(groups).forEach(([tournamentId, jornadas]) => {
+        Object.entries(jornadas).forEach(([jornadaId, matches]) => {
+          const tournament = matches[0]?.tournament;
+          const jornada = matches[0]?.jornada;
+          
+          if (tournament) {
+            grouped.push({
+              tournament,
+              jornada: jornada || { id: jornadaId, torneo_id: tournamentId, nombre: 'Sin jornada', tipo: null, numero: null },
+              matches
+            });
+          }
+        });
+      });
+
+      // Ordenar por nombre de torneo y número de jornada
+      grouped.sort((a, b) => {
+        if (a.tournament.name !== b.tournament.name) {
+          return a.tournament.name.localeCompare(b.tournament.name);
+        }
+        const aNum = a.jornada.numero || 0;
+        const bNum = b.jornada.numero || 0;
+        return aNum - bNum;
+      });
+
+      setGroupedMatches(grouped);
 
     } catch (error) {
       console.error('Error loading data:', error);
@@ -247,26 +320,37 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
           </div>
           
           {showMatches && (
-            matches.length > 0 ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg text-green-700">
-                    {formatDate(matches[0].date)}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-4">
-                    {matches.map((match) => (
-                      <MatchCard
-                        key={match.id}
-                        match={match}
-                        layout="horizontal"
-                        hideStatus={true}
-                      />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+            groupedMatches.length > 0 ? (
+              <div className="space-y-4">
+                {groupedMatches.map((group) => (
+                  <Card key={`${group.tournament.id}-${group.jornada.id}`} className="border-l-4 border-l-green-500">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Trophy className="w-4 h-4 text-green-600" />
+                        <CardTitle className="text-sm font-semibold text-gray-900">
+                          {group.tournament.name}
+                        </CardTitle>
+                      </div>
+                      <div className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded inline-block">
+                        {group.jornada.nombre}
+                        {group.jornada.numero && ` (${group.jornada.numero})`}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="space-y-3">
+                        {group.matches.map((match) => (
+                          <MatchCard
+                            key={match.id}
+                            match={match}
+                            layout="horizontal"
+                            hideStatus={true}
+                          />
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             ) : (
               <Card>
                 <CardContent className="flex items-center justify-center py-12">
@@ -275,6 +359,9 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
                       No hay partidos programados
                     </h3>
+                    <p className="text-sm text-gray-500">
+                      {formatDate(new Date().toISOString())}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
