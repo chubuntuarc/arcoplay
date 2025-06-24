@@ -13,12 +13,19 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { PremiumBadge } from "./PremiumBadge";
 import { AdminBadge } from "@/components/AdminBadge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 export const Navigation = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, signOut } = useAuth()
   const navigate = useNavigate();
+  const [editOpen, setEditOpen] = useState(false);
+  const [newName, setNewName] = useState(user?.name || "");
+  const [saving, setSaving] = useState(false);
 
   const navItems = [
     { id: '', label: 'Dashboard', icon: Trophy },
@@ -62,8 +69,36 @@ export const Navigation = () => {
     }
   }, [user]);
 
+  const handleSaveName = async () => {
+    if (!user) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from('users').update({ name: newName }).eq('id', user.id);
+      if (error) throw error;
+      toast.success('Nombre actualizado');
+      // Actualiza el contexto local
+      user.name = newName;
+      setEditOpen(false);
+    } catch (e) {
+      toast.error('No se pudo actualizar el nombre');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const getBorderClass = (role?: string) => {
+    switch (role) {
+      case 'user': return 'border-green-600';
+      case 'player': return 'border-neutral-900';
+      case 'pro': return 'border-purple-500';
+      case 'premium': return 'border-yellow-400';
+      case 'admin': return 'border-neutral-900';
+      default: return 'border-green-600';
+    }
+  };
+
   return (
-    <nav className="fixed top-0 left-0 right-0 bg-white shadow-lg border-b-4 border-green-600 z-50">
+    <nav className={`fixed top-0 left-0 right-0 bg-white shadow-lg border-b-4 z-50 ${getBorderClass(user?.role)}`}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -75,13 +110,20 @@ export const Navigation = () => {
             >
               <Menu className="w-6 h-6" />
             </button>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+            <button
+              className="flex items-center space-x-2 group"
+              onClick={() => navigate('/')}
+              aria-label="Ir al inicio"
+              style={{ background: 'none', border: 'none', padding: 0 }}
+            >
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center">
                 <img src="/arcoplay_logo.png" alt="ArcoPlay" className="w-10 h-10" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">ArcoPlay</h1>
-              <p className="text-sm text-gray-500">Juega con tus amigos</p>
-            </div>
+              </div>
+              <div className="text-left">
+                <h1 className="text-xl font-bold text-gray-900 group-hover:text-green-700 transition">ArcoPlay</h1>
+                <p className="text-sm text-gray-500">Juega con tus amigos</p>
+              </div>
+            </button>
           </div>
 
           {/* Navigation Items - Desktop */}
@@ -108,9 +150,13 @@ export const Navigation = () => {
 
           {/* User Menu */}
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-red-500 rounded-full flex items-center justify-center">
+            <button
+              className="w-8 h-8 bg-gradient-to-br from-green-500 to-red-500 rounded-full flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-green-400"
+              onClick={() => { setEditOpen(true); setNewName(user?.name || ""); }}
+              aria-label="Editar nombre de usuario"
+            >
               <User className="w-4 h-4 text-white" />
-            </div>
+            </button>
             <div className="hidden md:block">
               <p className="text-sm font-medium text-gray-900">{user?.name}</p>
               <p className="text-xs text-gray-500">{user?.email}</p>
@@ -191,6 +237,26 @@ export const Navigation = () => {
           </div>
         </div>
       </div>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar nombre de usuario</DialogTitle>
+          </DialogHeader>
+          <Input
+            value={newName}
+            onChange={e => setNewName(e.target.value)}
+            placeholder="Nuevo nombre"
+            className="mb-4"
+            disabled={saving}
+          />
+          <DialogFooter>
+            <Button onClick={handleSaveName} disabled={saving || !newName.trim()} className="w-full">
+              {saving ? 'Guardando...' : 'Guardar cambios'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </nav>
   );
 };
