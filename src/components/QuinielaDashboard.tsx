@@ -232,7 +232,7 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
                 onClick={() => setShowUserQuinielas(!showUserQuinielas)}
                 className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
-                <span>{showUserQuinielas ? 'Ocultar' : 'Mostrar'}</span>
+                <span>{showUserQuinielas ? "Ocultar" : "Mostrar"}</span>
                 {showUserQuinielas ? (
                   <ChevronUp className="w-4 h-4" />
                 ) : (
@@ -249,10 +249,13 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
                       id: quiniela.id,
                       name: quiniela.name,
                       participants: quiniela.current_participants,
-                      status: quiniela.is_active ? 'active' : 'finished',
+                      status: quiniela.is_active ? "active" : "finished",
                       currentJornada: 5, // TODO: Calcular jornada actual
                       totalJornadas: 17, // TODO: Obtener del torneo
-                      prize: quiniela.entry_fee > 0 ? `$${quiniela.entry_fee} MXN` : 'Gratis'
+                      prize:
+                        quiniela.entry_fee > 0
+                          ? `$${quiniela.entry_fee} MXN`
+                          : "Gratis",
                     }}
                     isAdmin={true}
                   />
@@ -262,14 +265,17 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
             {user?.role === "user" && (
               <div className="border-2 border-dashed border-green-400 rounded-lg p-6 flex flex-col items-center justify-center bg-green-50 mt-6">
                 <span className="text-3xl mb-2">✨</span>
-                <h3 className="text-lg font-bold text-green-800 mb-1">¿Quieres crear más quinielas?</h3>
+                <h3 className="text-lg font-bold text-green-800 mb-1">
+                  ¿Quieres crear más quinielas?
+                </h3>
                 <p className="text-sm text-green-700 mb-4 text-center">
-                  Mejora tu plan para crear quinielas ilimitadas y acceder a funciones premium.
+                  Mejora tu plan para crear quinielas ilimitadas y acceder a
+                  funciones premium.
                 </p>
                 <button
                   className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded transition"
                   onClick={() => {
-                    navigate('/plans');
+                    navigate("/plans");
                   }}
                 >
                   Ver planes premium
@@ -287,10 +293,14 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
                 Quinielas en las que Participo ({participatingQuinielas.length})
               </h2>
               <button
-                onClick={() => setShowParticipatingQuinielas(!showParticipatingQuinielas)}
+                onClick={() =>
+                  setShowParticipatingQuinielas(!showParticipatingQuinielas)
+                }
                 className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
-                <span>{showParticipatingQuinielas ? 'Ocultar' : 'Mostrar'}</span>
+                <span>
+                  {showParticipatingQuinielas ? "Ocultar" : "Mostrar"}
+                </span>
                 {showParticipatingQuinielas ? (
                   <ChevronUp className="w-4 h-4" />
                 ) : (
@@ -307,10 +317,13 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
                       id: quiniela.id,
                       name: quiniela.name,
                       participants: quiniela.current_participants,
-                      status: quiniela.is_active ? 'active' : 'finished',
+                      status: quiniela.is_active ? "active" : "finished",
                       currentJornada: 5, // TODO: Calcular jornada actual
                       totalJornadas: 17, // TODO: Obtener del torneo
-                      prize: quiniela.entry_fee > 0 ? `$${quiniela.entry_fee} MXN` : 'Gratis'
+                      prize:
+                        quiniela.entry_fee > 0
+                          ? `$${quiniela.entry_fee} MXN`
+                          : "Gratis",
                     }}
                     isAdmin={false}
                   />
@@ -318,6 +331,21 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
               </div>
             )}
           </section>
+        )}
+
+        {user?.role === "user" && (
+          <>
+            <div className="mt-8 border-2 border-dashed border-blue-400 rounded-lg p-6 bg-blue-50 flex flex-col items-center text-center">
+              <span className="text-3xl mb-2">📢</span>
+              <h3 className="text-lg font-bold text-blue-800 mb-1">
+                Anúnciate aquí
+              </h3>
+              <p className="text-sm text-blue-700 mb-4">
+                ¿Quieres promocionar tu negocio, tienda o servicio? ¡Llega a
+                miles de usuarios de ArcoPlay!
+              </p>
+            </div>
+          </>
         )}
 
         {userQuinielas.length === 0 && participatingQuinielas.length === 0 && (
@@ -346,12 +374,14 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
       <div className="xl:col-span-1">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Partidos de Hoy</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Partidos de Hoy
+            </h3>
             <button
               onClick={() => setShowMatches(!showMatches)}
               className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-900 transition-colors"
             >
-              <span>{showMatches ? 'Ocultar' : 'Mostrar'}</span>
+              <span>{showMatches ? "Ocultar" : "Mostrar"}</span>
               {showMatches ? (
                 <ChevronUp className="w-4 h-4" />
               ) : (
@@ -359,12 +389,15 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
               )}
             </button>
           </div>
-          
-          {showMatches && (
-            groupedMatches.length > 0 ? (
+
+          {showMatches &&
+            (groupedMatches.length > 0 ? (
               <div className="space-y-4">
                 {groupedMatches.map((group) => (
-                  <Card key={`${group.tournament.id}-${group.jornada.id}`} className="border-l-4 border-l-green-500">
+                  <Card
+                    key={`${group.tournament.id}-${group.jornada.id}`}
+                    className="border-l-4 border-l-green-500"
+                  >
                     <CardHeader className="pb-3">
                       <div className="flex items-center gap-2 mb-1">
                         <Trophy className="w-4 h-4 text-green-600" />
@@ -406,16 +439,18 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
                   </div>
                 </CardContent>
               </Card>
-            )
-          )}
+            ))}
         </div>
         {/* Web Development Ad Section */}
         {user?.role === "user" && (
           <div className="mt-8 border-2 border-dashed border-blue-400 rounded-lg p-6 bg-blue-50 flex flex-col items-center text-center">
             <span className="text-3xl mb-2">💻</span>
-            <h3 className="text-lg font-bold text-blue-800 mb-1">¿Necesitas una página web o software a la medida?</h3>
+            <h3 className="text-lg font-bold text-blue-800 mb-1">
+              ¿Necesitas una página web o software a la medida?
+            </h3>
             <p className="text-sm text-blue-700 mb-4">
-              Desarrollamos páginas, tiendas en línea y sistemas personalizados para tu negocio o proyecto. ¡Lleva tu idea al siguiente nivel!
+              Desarrollamos páginas, tiendas en línea y sistemas personalizados
+              para tu negocio o proyecto. ¡Lleva tu idea al siguiente nivel!
             </p>
             <a
               href="https://wa.me/526141561723?text=Hola%2C%20quiero%20informes%20sobre%20desarrollo%20web%20a%20la%20medida"

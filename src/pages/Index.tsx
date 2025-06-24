@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { QuinielaDashboard } from "@/components/QuinielaDashboard";
@@ -10,6 +10,7 @@ import { Footer } from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { joinQuiniela, isUserParticipant } from "@/lib/quiniela";
 import { toast } from "sonner";
+import { GoogleAd } from "@/components/GoogleAd";
 
 const Index = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -84,18 +85,7 @@ const Index = () => {
           onClose={() => setIsCreateModalOpen(false)}
         />
 
-        {user?.role === "user" && (
-          <div className="mt-8 border-2 border-dashed border-blue-400 rounded-lg p-6 bg-blue-50 flex flex-col items-center text-center">
-            <span className="text-3xl mb-2">📢</span>
-            <h3 className="text-lg font-bold text-blue-800 mb-1">
-              Anúnciate aquí
-            </h3>
-            <p className="text-sm text-blue-700 mb-4">
-              ¿Quieres promocionar tu negocio, tienda o servicio? ¡Llega a miles
-              de usuarios de ArcoPlay!
-            </p>
-          </div>
-        )}
+        {user?.role === "user" && <GoogleAd slot="9681275201" />}
         <Footer />
       </main>
     </div>
