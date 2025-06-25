@@ -16,6 +16,7 @@ import { Tournaments } from "./pages/Tournaments";
 import { ControlQuinielas } from "./pages/ControlQuinielas";
 import Plans from "./pages/Plans";
 import ViewQuiniela from "./pages/ViewQuiniela";
+import Landing from "./pages/Landing";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/control/quinielas" element={<ControlQuinielas />} />
             <Route path="/plans" element={<Plans />} />
             <Route path="/quiniela/:id" element={<ViewQuiniela />} />
+            <Route path="/landing" element={<Landing />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
