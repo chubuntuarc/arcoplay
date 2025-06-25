@@ -15,6 +15,7 @@ import { PremiumBadge } from "./PremiumBadge";
 import { AdminBadge } from "@/components/AdminBadge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
@@ -25,6 +26,8 @@ export const Navigation = () => {
   const navigate = useNavigate();
   const [editOpen, setEditOpen] = useState(false);
   const [newName, setNewName] = useState(user?.name || "");
+  const [newEmail, setNewEmail] = useState(user?.email || "");
+  const [newPhone, setNewPhone] = useState(user?.phone || "");
   const [saving, setSaving] = useState(false);
 
   const navItems = [
@@ -69,18 +72,53 @@ export const Navigation = () => {
     }
   }, [user]);
 
-  const handleSaveName = async () => {
+  const handleEditProfile = () => {
+    setNewName(user?.name || "");
+    setNewEmail(user?.email || "");
+    setNewPhone(user?.phone || "");
+    setEditOpen(true);
+  };
+
+  const handleSaveProfile = async () => {
     if (!user) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from('users').update({ name: newName }).eq('id', user.id);
+      const updateData: { name?: string; email?: string; phone?: string } = {};
+      
+      if (newName.trim() !== user.name) {
+        updateData.name = newName.trim();
+      }
+      
+      if (newEmail.trim() !== user.email) {
+        updateData.email = newEmail.trim();
+      }
+      
+      if (newPhone.trim() !== user.phone) {
+        updateData.phone = newPhone.trim();
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        toast.info('No hay cambios para guardar');
+        setEditOpen(false);
+        return;
+      }
+
+      const { error } = await supabase
+        .from('users')
+        .update(updateData)
+        .eq('id', user.id);
+
       if (error) throw error;
-      toast.success('Nombre actualizado');
+      
+      toast.success('Perfil actualizado correctamente');
+      
       // Actualiza el contexto local
-      user.name = newName;
+      Object.assign(user, updateData);
+      
       setEditOpen(false);
     } catch (e) {
-      toast.error('No se pudo actualizar el nombre');
+      console.error('Error updating profile:', e);
+      toast.error('No se pudo actualizar el perfil');
     } finally {
       setSaving(false);
     }
@@ -152,14 +190,15 @@ export const Navigation = () => {
           <div className="flex items-center space-x-3">
             <button
               className="w-8 h-8 bg-gradient-to-br from-green-500 to-red-500 rounded-full flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-green-400"
-              onClick={() => { setEditOpen(true); setNewName(user?.name || ""); }}
-              aria-label="Editar nombre de usuario"
+              onClick={handleEditProfile}
+              aria-label="Editar perfil de usuario"
             >
               <User className="w-4 h-4 text-white" />
             </button>
             <div className="hidden md:block">
               <p className="text-sm font-medium text-gray-900">{user?.name}</p>
               <p className="text-xs text-gray-500">{user?.email}</p>
+              {user?.phone && <p className="text-xs text-gray-500">{user?.phone}</p>}
               {user?.role === "premium" && <div className="mt-1"><PremiumBadge /></div>}
               {user?.role === "admin" && <div className="mt-1"><AdminBadge /></div>}
             </div>
@@ -196,6 +235,7 @@ export const Navigation = () => {
               <div>
                 <p className="text-sm font-medium text-gray-900">{user?.name}</p>
                 <p className="text-xs text-gray-500">{user?.email}</p>
+                {user?.phone && <p className="text-xs text-gray-500">{user?.phone}</p>}
                 {user?.role === "premium" && <div className="mt-1"><PremiumBadge /></div>}
                 {user?.role === "admin" && <div className="mt-1"><AdminBadge /></div>}
               </div>
@@ -239,19 +279,71 @@ export const Navigation = () => {
       </div>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Editar nombre de usuario</DialogTitle>
+            <DialogTitle>Editar perfil de usuario</DialogTitle>
           </DialogHeader>
-          <Input
-            value={newName}
-            onChange={e => setNewName(e.target.value)}
-            placeholder="Nuevo nombre"
-            className="mb-4"
-            disabled={saving}
-          />
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="name">Nombre</Label>
+              <Input
+                id="name"
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                placeholder="Tu nombre completo"
+                disabled={saving}
+              />
+            </div>
+            <div>
+              <Label htmlFor="email">Correo electrónico</Label>
+              <Input
+                id="email"
+                type="email"
+                value={newEmail}
+                onChange={e => setNewEmail(e.target.value)}
+                placeholder="tu@email.com"
+                disabled={saving}
+              />
+            </div>
+            <div>
+              <Label htmlFor="phone">Teléfono (WhatsApp)</Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={newPhone}
+                onChange={e => {
+                  let value = e.target.value;
+                  // Remover todos los caracteres no numéricos
+                  value = value.replace(/\D/g, '');
+                  // Si no empieza con 52, agregarlo
+                  if (value && !value.startsWith('52')) {
+                    value = '52' + value;
+                  }
+                  // Limitar a 12 dígitos (52 + 10 dígitos del teléfono)
+                  if (value.length > 12) {
+                    value = value.substring(0, 12);
+                  }
+                  setNewPhone(value);
+                }}
+                onBlur={e => {
+                  let value = e.target.value;
+                  // Si hay un número pero no empieza con 52, agregarlo
+                  if (value && !value.startsWith('52')) {
+                    value = '52' + value;
+                    setNewPhone(value);
+                  }
+                }}
+                placeholder="614 123 4567"
+                disabled={saving}
+              />
+            </div>
+          </div>
           <DialogFooter>
-            <Button onClick={handleSaveName} disabled={saving || !newName.trim()} className="w-full">
+            <Button 
+              onClick={handleSaveProfile} 
+              disabled={saving || (!newName.trim() && !newEmail.trim() && !newPhone.trim())} 
+              className="w-full"
+            >
               {saving ? 'Guardando...' : 'Guardar cambios'}
             </Button>
           </DialogFooter>
