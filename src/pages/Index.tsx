@@ -10,7 +10,6 @@ import { Footer } from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { joinQuiniela, isUserParticipant } from "@/lib/quiniela";
 import { toast } from "sonner";
-import { GoogleAd } from "@/components/GoogleAd";
 
 const Index = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -84,8 +83,6 @@ const Index = () => {
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
         />
-
-        {user?.role === "user" && <GoogleAd slot="9681275201" />}
         <Footer />
       </main>
     </div>
