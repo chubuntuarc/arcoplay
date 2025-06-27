@@ -1,5 +1,11 @@
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
+  ],
+  "cron": [
+    {
+      "path": "/api/cron-update-events",
+      "schedule": "*/60 * * * *"
+    }
   ]
 }

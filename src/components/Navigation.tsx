@@ -7,7 +7,8 @@ import {
   Calendar,
   Menu,
   X,
-  Shield
+  Shield,
+  Clock
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -154,12 +155,12 @@ export const Navigation = () => {
               aria-label="Ir al inicio"
               style={{ background: 'none', border: 'none', padding: 0 }}
             >
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+              {/* <div className="w-10 h-10 rounded-lg flex items-center justify-center">
                 <img src="/arcoplay_logo.png" alt="ArcoPlay" className="w-10 h-10" />
-              </div>
+              </div> */}
               <div className="text-left">
                 <h1 className="text-xl font-bold text-gray-900 group-hover:text-green-700 transition">ArcoPlay</h1>
-                <p className="text-sm text-gray-500">Juega con tus amigos</p>
+                <p className="text-sm text-gray-500">Beta 1.0</p>
               </div>
             </button>
           </div>
