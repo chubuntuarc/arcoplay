@@ -20,24 +20,92 @@ mercadopago.configure({
 });
 
 export default async (req, res) => {
+  console.log('=== WEBHOOK RECEIVED ===');
+  console.log('Method:', req.method);
+  console.log('Headers:', req.headers);
+  console.log('URL:', req.url);
+  
   if (req.method === 'GET') {
     // MercadoPago puede probar el webhook con GET, responde 200 OK
+    console.log('GET request received - webhook test');
     res.status(200).json({ message: 'Webhook GET ok' });
     return;
   }
+  
   if (req.method !== 'POST') {
+    console.log('Method not allowed:', req.method);
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
 
   try {
-    console.log('Received webhook:', JSON.stringify(req.body, null, 2));
+    console.log('=== WEBHOOK BODY ===');
+    console.log('Raw body:', req.body);
+    console.log('Body type:', typeof req.body);
+    console.log('Body stringified:', JSON.stringify(req.body, null, 2));
+    
     const { data, type, entity, id: notificationId } = req.body;
+    
+    console.log('=== PARSED DATA ===');
+    console.log('data:', data);
+    console.log('type:', type);
+    console.log('entity:', entity);
+    console.log('notificationId:', notificationId);
 
-    // Only handle preapproval events
-    if (entity === 'preapproval' && data && data.id) {
-      const planId = data.id;
+    // Handle different types of events
+    if (entity === 'preapproval') {
+      console.log('=== PROCESSING PREAPPROVAL ===');
+      
+      // Get the preapproval ID from the data
+      const preapprovalId = data?.id || notificationId;
+      console.log('Preapproval ID:', preapprovalId);
+      
+      if (!preapprovalId) {
+        console.log('No preapproval ID found in webhook data');
+        res.status(400).json({ error: 'No preapproval ID found' });
+        return;
+      }
+
+      let payer_email = null;
+      let planId = null;
+      
+      try {
+        console.log('Getting preapproval details for ID:', preapprovalId);
+        const preapproval = await mercadopago.preapproval.get(preapprovalId);
+        console.log('Preapproval response:', preapproval.body);
+        
+        payer_email = preapproval.body.payer_email;
+        planId = preapproval.body.preapproval_plan_id;
+        
+        console.log('Found payer email:', payer_email);
+        console.log('Found plan ID:', planId);
+      } catch (e) {
+        console.log('Error getting preapproval details:', e.message);
+        console.log('Error details:', e);
+        
+        // If we can't get the preapproval, try to extract info from the webhook data
+        if (data && data.preapproval_plan_id) {
+          planId = data.preapproval_plan_id;
+          console.log('Using plan ID from webhook data:', planId);
+        }
+        
+        // Try to get email from webhook data if available
+        if (data && data.payer_email) {
+          payer_email = data.payer_email;
+          console.log('Using payer email from webhook data:', payer_email);
+        }
+      }
+
+      // If we still don't have a plan ID, we can't proceed
+      if (!planId) {
+        console.log('No plan ID found, cannot update user role');
+        res.status(400).json({ error: 'No plan ID found' });
+        return;
+      }
+
       const newRole = PLAN_ROLE_MAP[planId];
+      console.log('Plan ID:', planId);
+      console.log('New Role:', newRole);
       
       if (!newRole) {
         console.log('Plan no reconocido:', planId);
@@ -45,38 +113,16 @@ export default async (req, res) => {
         return;
       }
 
-      // Try to get preapproval details using the notification ID first
-      let payer_email = null;
-      
-      try {
-        // First try to get preapproval using the notification ID
-        const preapproval = await mercadopago.preapproval.get(notificationId);
-        payer_email = preapproval.body.payer_email;
-      } catch (e) {
-        console.log('Could not get preapproval with notification ID, trying alternative approach...');
-        
-        // If that fails, try to get recent preapprovals for this plan
-        try {
-          const preapprovals = await mercadopago.preapproval.search({
-            preapproval_plan_id: planId,
-            status: 'authorized'
-          });
-          
-          if (preapprovals.body.results && preapprovals.body.results.length > 0) {
-            // Get the most recent one
-            const latestPreapproval = preapprovals.body.results[0];
-            payer_email = latestPreapproval.payer_email;
-          }
-        } catch (searchError) {
-          console.error('Error searching preapprovals:', searchError);
-        }
-      }
-
+      // If we don't have an email, we can't update the user
       if (!payer_email) {
         console.log('No se pudo identificar el email, no se actualiza el rol.');
         res.status(200).json({ message: 'No se pudo identificar el usuario, rol no actualizado.' });
         return;
       }
+
+      console.log('=== UPDATING USER ROLE ===');
+      console.log('Email:', payer_email);
+      console.log('New Role:', newRole);
 
       const { data: user, error: userError } = await supabase
         .from('users')
@@ -86,7 +132,6 @@ export default async (req, res) => {
 
       if (!user) {
         console.error('No user found with email:', payer_email);
-        // Optionally: send yourself an alert or handle this case
         res.status(404).json({ error: 'No user found with this email' });
         return;
       }
@@ -108,6 +153,7 @@ export default async (req, res) => {
       return;
     }
 
+    console.log('Evento ignorado - entity:', entity, 'data:', data);
     res.status(200).json({ message: 'Evento ignorado' });
   } catch (e) {
     console.error('Webhook error:', e);
