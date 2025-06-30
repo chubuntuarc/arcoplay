@@ -6,9 +6,10 @@ import { MatchCard } from "./MatchCard";
 import { Clock, Loader2, ChevronDown, ChevronUp, Trophy } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { getUserQuinielas, Quiniela } from "@/lib/quiniela";
+import { getUserQuinielas, Quiniela, canCreateQuiniela } from "@/lib/quiniela";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { CreateQuinielaModal } from "./CreateQuinielaModal";
 
 interface QuinielaDashboardProps {
   userRole: 'admin' | 'participant';
@@ -64,7 +65,7 @@ const formatDate = (dateString: string) => {
 };
 
 export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
   const [userQuinielas, setUserQuinielas] = useState<Quiniela[]>([]);
   const [participatingQuinielas, setParticipatingQuinielas] = useState<Quiniela[]>([]);
   const [groupedMatches, setGroupedMatches] = useState<GroupedMatches[]>([]);
@@ -72,7 +73,12 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
   const [showMatches, setShowMatches] = useState(true);
   const [showUserQuinielas, setShowUserQuinielas] = useState(true);
   const [showParticipatingQuinielas, setShowParticipatingQuinielas] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const navigate = useNavigate();
+
+  // Calcular quinielas activas del usuario
+  const activeQuinielasCount = userQuinielas.filter(q => q.is_active).length;
+  const canCreate = user ? canCreateQuiniela(user.role, activeQuinielasCount) : false;
 
   useEffect(() => {
     if (user) {
@@ -197,9 +203,6 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
           .eq('id', user.id)
           .single();
         if (userData) {
-          setUser(userData);
-          localStorage.setItem('user', JSON.stringify(userData));
-          localStorage.setItem('lastRoleCheck', now.toString());
           if (userData.role !== previousRole) {
             toast.info(`Tu rol ha cambiado: ahora eres "${userData.role}"`);
           }
@@ -219,6 +222,11 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+      <CreateQuinielaModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onQuinielaCreated={loadData}
+      />
       {/* Quinielas Section */}
       <div className="xl:col-span-3 space-y-8">
         {userQuinielas.length > 0 && (
@@ -226,7 +234,7 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900 flex items-center">
                 <div className="w-1 h-8 bg-green-600 rounded-full mr-3"></div>
-                Mis Quinielas ({userQuinielas.length})
+                Administradas ({userQuinielas.length})
               </h2>
               <button
                 onClick={() => setShowUserQuinielas(!showUserQuinielas)}
@@ -260,6 +268,14 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
                     isAdmin={true}
                   />
                 ))}
+                {canCreate && (
+                  <button
+                    className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded transition mb-4"
+                    onClick={() => setShowCreateModal(true)}
+                  >
+                    Crear nueva quiniela
+                  </button>
+                )}
               </div>
             )}
             {user?.role === "user" && (

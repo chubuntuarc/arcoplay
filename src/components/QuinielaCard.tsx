@@ -89,7 +89,7 @@ export const QuinielaCard = ({ quiniela, isAdmin }: QuinielaCardProps) => {
         {/* Actions */}
         <div className="flex space-x-2 pt-2">
           <Button 
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+            className="flex-1 bg-[#cb5c49] hover:bg-[#a94432] text-white"
             size="sm"
             onClick={() => navigate(`/quiniela/${quiniela.id}`)}
           >
