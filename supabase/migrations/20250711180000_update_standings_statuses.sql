@@ -1,27 +1,4 @@
--- Function to calculate points for a prediction
-CREATE OR REPLACE FUNCTION calculate_prediction_points(
-  predicted_home INTEGER,
-  predicted_away INTEGER,
-  actual_home INTEGER,
-  actual_away INTEGER
-) RETURNS INTEGER AS $$
-BEGIN
-  -- Exact prediction: 3 points
-  IF predicted_home = actual_home AND predicted_away = actual_away THEN
-    RETURN 3;
-  END IF;
-  
-  -- Correct result (win/loss/draw): 1 point
-  IF (predicted_home > predicted_away AND actual_home > actual_away) OR
-     (predicted_home < predicted_away AND actual_home < actual_away) OR
-     (predicted_home = predicted_away AND actual_home = actual_away) THEN
-    RETURN 1;
-  END IF;
-  
-  -- Wrong prediction: 0 points
-  RETURN 0;
-END;
-$$ LANGUAGE plpgsql;
+-- Migration: Update standings calculation to include FT, AET, PEN as finalizados
 
 -- Function to update standings for a specific jornada
 CREATE OR REPLACE FUNCTION update_standings_for_jornada(
@@ -218,48 +195,4 @@ BEGIN
       updated_at = NOW();
   END LOOP;
 END;
-$$ LANGUAGE plpgsql;
-
--- Trigger function to update standings when match status changes to 'FT'
-CREATE OR REPLACE FUNCTION trigger_update_standings_on_match_finish()
-RETURNS TRIGGER AS $$
-DECLARE
-  quiniela_record RECORD;
-BEGIN
-  -- Only trigger when status changes to 'FT' (finished)
-  IF NEW.status = 'FT' AND (OLD.status IS NULL OR OLD.status != 'FT') THEN
-    -- Get all quinielas that have predictions for this match
-    FOR quiniela_record IN
-      SELECT DISTINCT qp.quiniela_id
-      FROM quiniela_predictions qp
-      WHERE qp.match_id = NEW.id
-    LOOP
-      -- Update standings for the specific jornada
-      IF NEW.jornada_id IS NOT NULL THEN
-        PERFORM update_standings_for_jornada(quiniela_record.quiniela_id, NEW.jornada_id);
-      END IF;
-      
-      -- Update general standings
-      PERFORM update_general_standings(quiniela_record.quiniela_id);
-    END LOOP;
-  END IF;
-  
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Create trigger on matches table
-DROP TRIGGER IF EXISTS update_standings_on_match_finish ON matches;
-CREATE TRIGGER update_standings_on_match_finish
-  AFTER UPDATE ON matches
-  FOR EACH ROW
-  EXECUTE FUNCTION trigger_update_standings_on_match_finish();
-
--- Add unique constraint for quiniela_standings to prevent duplicates
-ALTER TABLE quiniela_standings 
-ADD CONSTRAINT unique_quiniela_user_jornada 
-UNIQUE (quiniela_id, user_id, jornada_id);
-
--- Add index for better performance
-CREATE INDEX IF NOT EXISTS quiniela_standings_jornada_user_idx 
-ON quiniela_standings(quiniela_id, user_id, jornada_id); 
+$$ LANGUAGE plpgsql; 
