@@ -21,7 +21,7 @@ export const CreateQuinielaModal = ({ isOpen, onClose, onQuinielaCreated }: Crea
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    entryFee: "",
+    entryFee: "0",
     maxParticipants: "",
     tournament: ""
   });
@@ -213,7 +213,7 @@ export const CreateQuinielaModal = ({ isOpen, onClose, onQuinielaCreated }: Crea
           </div>
 
           {/* Cuota de entrada */}
-          <div className="space-y-2 w-full">
+          {/* <div className="space-y-2 w-full">
             <Label htmlFor="entryFee" className="text-sm font-medium text-gray-700 flex items-center">
               <Trophy className="w-4 h-4 text-yellow-500 mr-1" />
               Cuota de Entrada (MXN)
@@ -229,7 +229,7 @@ export const CreateQuinielaModal = ({ isOpen, onClose, onQuinielaCreated }: Crea
               step="0.01"
               disabled={!canCreate}
             />
-          </div>
+          </div> */}
 
           {/* Máximo de participantes */}
           <div className="space-y-2 w-full">
@@ -307,9 +307,9 @@ export const CreateQuinielaModal = ({ isOpen, onClose, onQuinielaCreated }: Crea
               <li>• Resultado (Ganó/Perdió/Empató): 1 punto</li>
               <li>• Resultado incorrecto: 0 puntos</li>
             </ul>
-            <p className="text-xs text-green-600 mt-2">
+            {/* <p className="text-xs text-green-600 mt-2">
               Podrás personalizar estas reglas después de crear la quiniela.
-            </p>
+            </p> */}
           </div>
 
           {/* Botones */}
