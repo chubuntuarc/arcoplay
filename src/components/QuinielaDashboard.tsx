@@ -179,6 +179,15 @@ export const QuinielaDashboard = ({ userRole }: QuinielaDashboardProps) => {
         return aNum - bNum;
       });
 
+      // Ordenar quinielas: activas primero, luego por fecha de actualización descendente
+      const sortedUserQuinielas = [...createdQuinielas].sort((a, b) => {
+        if (a.is_active === b.is_active) {
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+        }
+        return a.is_active ? -1 : 1;
+      });
+
+      setUserQuinielas(sortedUserQuinielas);
       setGroupedMatches(grouped);
 
     } catch (error) {
