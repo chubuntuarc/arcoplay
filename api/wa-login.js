@@ -1,85 +1,42 @@
-import { createClient } from '@supabase/supabase-js';
-import 'dotenv/config';
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+import { supabase } from '@/lib/supabase' // o tu cliente de base de datos
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ success: false, error: 'Método no permitido' });
   }
 
-  try {
-    const { phone, code } = req.body;
+  const { phone, code } = req.body;
 
-    if (!phone || !code) {
-      return res.status(400).json({ error: 'Phone and code are required' });
-    }
+  // 1. Buscar usuario por teléfono
+  const { data: user, error: userError } = await supabase
+    .from('users')
+    .select('*')
+    .eq('phone', phone)
+    .single();
 
-    // Find user by phone
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('phone', phone)
-      .single();
-
-    if (userError || !user) {
-      return res.status(401).json({ error: 'Usuario no encontrado' });
-    }
-
-    // Check if access code matches
-    if (user.access_code !== code) {
-      return res.status(401).json({ error: 'Código inválido' });
-    }
-
-    // Check if code is expired (24 hours)
-    const codeCreatedAt = new Date(user.updated_at || user.created_at);
-    const now = new Date();
-    const hoursDiff = (now - codeCreatedAt) / (1000 * 60 * 60);
-    
-    if (hoursDiff > 24) {
-      return res.status(401).json({ error: 'Código expirado' });
-    }
-
-    // Create or update session
-    const { data: session, error: sessionError } = await supabase
-      .from('sessions')
-      .upsert([
-        {
-          user_id: user.id,
-          access_code: code,
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
-        }
-      ], {
-        onConflict: 'user_id'
-      })
-      .select()
-      .single();
-
-    if (sessionError) {
-      console.error('Error creating session:', sessionError);
-      return res.status(500).json({ error: 'Error creating session' });
-    }
-
-    res.status(200).json({ 
-      success: true, 
-      user: {
-        id: user.id,
-        name: user.name,
-        phone: user.phone,
-        email: user.email,
-        role: user.role
-      },
-      session 
-    });
-
-  } catch (error) {
-    console.error('Error in WhatsApp login:', error);
-    res.status(500).json({ 
-      error: 'Error en el login',
-      details: error.message 
-    });
+  if (userError || !user) {
+    return res.status(400).json({ success: false, error: 'Usuario no encontrado' });
   }
+
+  // 2. Buscar código válido (no expirado)
+  const { data: session, error: sessionError } = await supabase
+    .from('sessions')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('access_code', code)
+    .gt('expires_at', new Date().toISOString())
+    .single();
+
+  if (sessionError || !session) {
+    return res.status(400).json({ success: false, error: 'Código inválido o expirado' });
+  }
+
+  // 3. (Opcional) Marcar el código como usado o eliminarlo
+
+  // 4. Responder con los datos del usuario y sesión
+  return res.status(200).json({
+    success: true,
+    user,
+    session
+  });
 }
