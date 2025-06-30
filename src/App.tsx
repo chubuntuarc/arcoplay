@@ -18,6 +18,7 @@ import Plans from "./pages/Plans";
 import ViewQuiniela from "./pages/ViewQuiniela";
 import Landing from "./pages/Landing";
 import CronJobs from "./pages/CronJobs";
+import StyleGuide from "./pages/StyleGuide";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/plans" element={<Plans />} />
             <Route path="/quiniela/:id" element={<ViewQuiniela />} />
             <Route path="/landing" element={<Landing />} />
+            <Route path="/style-guide" element={<StyleGuide />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
