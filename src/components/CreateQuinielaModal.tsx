@@ -334,6 +334,7 @@ export const CreateQuinielaModal = ({ isOpen, onClose, onQuinielaCreated }: Crea
             form=""
             className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
             disabled={!canCreate || isLoading}
+            onClick={handleSubmit}
           >
             {isLoading ? 'Creando...' : 'Crear Quiniela'}
           </Button>
